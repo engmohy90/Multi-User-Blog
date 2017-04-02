@@ -1,0 +1,35 @@
+
+
+{% extends "html.html" %}
+
+{% block html %}
+
+ 	{% if user == "" %}	
+
+ 	<a href="/login"> <button name="login" style="background-color: green; width: 136px; height: 40px">login</button></a>
+	<a href="/signup"> <button name="signup" style="background-color: green; width: 136px; height: 40px">signup</button></a>
+	
+	{% else  %}
+
+	<h3>you are logedin as {{user}}</h3>
+	<a href="/newpost"> <button name="newpost" style="background-color: green; width: 136px; height: 40px">new post</button></a>
+	<a href="/logout"> <button name="logout" style="background-color: green; width: 136px; height: 40px">logout</button></a>
+	
+	{% endif %}
+
+<hr style="border-width: 3px">
+<h2>About me </h2>
+<p> iam mohamed mohy from egypt <br>
+	i love PES and watching movies<br>
+	and this is adam post it should be longer than this so i am  going to  write any thing here <br>
+	so if you like my blog donot feel shy to contact me :D smilly face &#9786;
+
+</p>
+{% for data in data_store %}
+
+	<hr style="border-width: 1px">
+	<h2>{{data.title}}</h2>
+	<p>{{data.post_content}}</p>
+{% endfor %}
+
+{% endblock %}

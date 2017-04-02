@@ -1,0 +1,50 @@
+* {
+	font-family: "osefin Slab", serif;	
+}
+
+body {
+	background-color: #cedbe6;
+}
+
+.nav {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+
+.li_nav {
+    float: left;
+}
+
+.a_nav {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+.li_nav:hover:not(.active) {
+    background-color: #111;
+}
+
+.active {
+    background-color: #4CAF50;
+}
+.Clogo {
+	float: left;
+	margin: 15px;
+}
+.Clist {
+	list-style: none;
+}
+textarea {
+    width: 450px;
+    height: 150px;
+}
+.title {
+    width: 150px;
+    height: 30px;
+}
