@@ -48,6 +48,37 @@ def pass_check_salt(pw,h):
 		return True
 	else:
 		return False
+def del_post(key,cookies):
+	x = Post.get(key)
+	user_id = secure_cookie(cookies)
+	if user_id :
+		user_n = Users.get_by_id(int(user_id))
+	else :
+		error = "this post belong to %s you cannot delete" % x.username
+		return error
+	user_name = user_n.username
+	
+	if x.username == user_name :
+		x.delete()
+		error = "post deleted"
+		return error
+	else :
+		error = "this post belong to %s you cannot delete" % x.username
+		return error
+def edit_post(key,cookies):
+		x = Post.get(key)
+		user_id = secure_cookie(cookies)
+		if not user_id :
+			error = True
+			return error
+		user_n = Users.get_by_id(int(user_id))
+		user_name = user_n.username
+		if user_name == x.username:
+			error = False
+			return error
+		else:
+			error = True
+			return error
 
 class Users(db.Model):
 
@@ -81,23 +112,35 @@ class Handler(webapp2.RequestHandler):
 		
 		self.write(self.render_str(template, **kw))
 
-
 class MainPage(Handler):
 
 
 	def get(self):
+		posts = db.GqlQuery("SELECT * FROM Post order by last_modified desc limit 10")
 		user = ""
 		user_id = self.request.cookies.get("user_id", "1234|6547")
 		check_cookie = secure_cookie(user_id)
 		if check_cookie :
 			user_name = Users.get_by_id(int(check_cookie),parent=None)
 			user = user_name.username
-			self.render_html("frontpage.html", user = user)
+			self.render_html("frontpage.html", user = user, posts = posts)
 		else:
 			
-			self.render_html("frontpage.html", user = user)
-
-
+			self.render_html("frontpage.html", user = user, posts = posts)
+	def post(self):
+		error = True
+		del_key = self.request.get("del")
+		edit_key = self.request.get("edit")
+		my_cookie =self.request.cookies.get("user_id", "1234|6547")
+		if del_key :
+			del_result = del_post(del_key,my_cookie)
+			self.write(del_result)
+		if edit_key :
+			error = edit_post(edit_key,my_cookie)
+		if error == False :
+			self.redirect("/edit?key=%s"% edit_key)
+		if error == True :
+			self.write("this post belong to another user")
 
 class LogIn(Handler):
 
@@ -211,6 +254,7 @@ class NewPost(Handler):
 class MyNewPost(Handler):
 
 	def get(self,i):
+
 		post = Post.get_by_id(int(i))
 		title = post.title
 		con = post.content
@@ -229,14 +273,62 @@ class MyPosts(Handler):
 			self.render_html("myposts.html", posts = posts)
 		else:
 			self.redirect("/login")
-
+	def post(self):
+		del_key = self.request.get("del")
+		edit_key = self.request.get("edit")
+		my_cookie =self.request.cookies.get("user_id", "1234|6547")
+		if del_key :
+			del_result = del_post(del_key,my_cookie)
+			self.write(del_result)
 
 class LogOut(Handler):
 
 	def get(self):
 		self.response.headers.add_header("set-Cookie","user_id=; path=/")
-		self.redirect("/")
-						
+		self.redirect("/signup")
+
+class Edit(Handler):
+	def get(self):
+
+		key = self.request.get("key")
+		if key :
+			post = Post.get(key)
+			self.render_html("newpost.html", title = post.title, content = post.content)
+		else: 
+			self.write("error happend ")
+
+	def post(self):
+
+		key = self.request.get("key")
+		cookie_get = self.request.cookies.get("user_id", "1234|6547")
+		check_cookie = secure_cookie(cookie_get)
+		title = self.request.get("title")
+		content = self.request.get("content")
+		error = dict()
+		have_error =False
+		if not title :
+			error["title_empty"] = "please enter title"
+			have_error = True
+		if not content :
+			error["post_empty"] = "please enter content to your post"
+			have_error = True
+		if check_cookie == None:
+			have_error = True
+			error["login"] = "please login first"
+		if have_error == False:
+			username = Users.get_by_id(int(check_cookie), parent=None)
+			q = Post.get(key)
+			q.title = title
+			q.content = content
+			q.put()
+			self.redirect("/mynewpost/%s"%str(q.key().id()))
+		else:
+			self.render_html("newpost.html", **error)
+		
+
+
+
+		
 app =  webapp2.WSGIApplication([("/", MainPage), ("/login", LogIn), ("/signup", SignUp), ("/welcome", Welcome),
-	("/logout", LogOut), ("/newpost", NewPost), ("/myposts", MyPosts), ("/mynewpost/([0-9]+)", MyNewPost)]
+	("/logout", LogOut), ("/newpost", NewPost), ("/myposts", MyPosts), ("/mynewpost/([0-9]+)", MyNewPost), ("/edit", Edit)]
 	,debug = True)

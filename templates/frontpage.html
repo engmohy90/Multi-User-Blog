@@ -12,24 +12,41 @@
 	{% else  %}
 
 	<h3>you are logedin as {{user}}</h3>
+
 	<a href="/newpost"> <button name="newpost" style="background-color: green; width: 136px; height: 40px">new post</button></a>
+	<a href="/myposts"> <button name="myposts" style="background-color: green; width: 136px; height: 40px">my posts</button></a>
+
 	<a href="/logout"> <button name="logout" style="background-color: green; width: 136px; height: 40px">logout</button></a>
 	
 	{% endif %}
 
 <hr style="border-width: 3px">
-<h2>About me </h2>
+
+<form method="post">
+
+{% for data in posts %}
+
+	<hr style="border-width: 1px">
+	<span style="color: #32bcfb ;float: right;font-size: .7em;"> CREATED AT :{{data.created.strftime("%b %d, %Y")}}</span>
+		
+
+	<h2>{{data.title}}</h2>
+
+	<p>{{data.content}}</p>
+	<button name="like" value="{{data.key()}}">like</button>
+	<button style="margin-right: 60px" name="dislike" value="{{data.key()}}">dislike</button>
+	<button name="del" value="{{data.key()}}">delete</button>
+	<button name="edit" value="{{data.key()}}">edit</button>
+
+{% endfor %}
+</form>
+<hr style="border-width: 3px">
+<h2 id="about">About me </h2>
 <p> iam mohamed mohy from egypt <br>
 	i love PES and watching movies<br>
 	and this is adam post it should be longer than this so i am  going to  write any thing here <br>
 	so if you like my blog donot feel shy to contact me :D smilly face &#9786;
 
 </p>
-{% for data in data_store %}
-
-	<hr style="border-width: 1px">
-	<h2>{{data.title}}</h2>
-	<p>{{data.post_content}}</p>
-{% endfor %}
 
 {% endblock %}
