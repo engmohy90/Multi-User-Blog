@@ -3,7 +3,7 @@ import jinja2
 import os
 import hmac
 import re
-from google.appengine.ext import db
+from google.appengine.ext import ndb
 import string
 import random
 import hashlib
@@ -35,7 +35,6 @@ def secure_cookie(h):
 		return z
 	else:
 		return None
-
 def make_pw_hash(pw):
 	salt = ''.join(random.choice(string.letters) for x in xrange(5))
 	pw = str(pw)
@@ -48,8 +47,9 @@ def pass_check_salt(pw,h):
 		return True
 	else:
 		return False
-def del_post(key,cookies):
-	x = Post.get(key)
+def del_post(key_id,cookies):
+	key_id = int (key_id)
+	x = Post.get_by_id(key_id)
 	user_id = secure_cookie(cookies)
 	if user_id :
 		user_n = Users.get_by_id(int(user_id))
@@ -59,44 +59,42 @@ def del_post(key,cookies):
 	user_name = user_n.username
 	
 	if x.username == user_name :
-		x.delete()
+		x.key.delete()
 		error = "post deleted"
 		return error
 	else :
 		error = "this post belong to %s you cannot delete" % x.username
 		return error
-def edit_post(key,cookies):
-		x = Post.get(key)
+def edit_post(key_id,cookies):
+		key_id = int (key_id)
+		x = Post.get_by_id(key_id)
 		user_id = secure_cookie(cookies)
 		if not user_id :
-			error = True
-			return error
+			 error = "please log in first"
+			 return error
 		user_n = Users.get_by_id(int(user_id))
 		user_name = user_n.username
-		if user_name == x.username:
-			error = False
-			return error
-		else:
-			error = True
+		if not user_name == x.username:
+			error = " this  post does not belong to you"
 			return error
 
-class Users(db.Model):
+class Users(ndb.Model):
 
-	username = db.StringProperty(required = True)
-	password = db.StringProperty(required = True)
-	email = db.StringProperty()
-	created = db.DateTimeProperty(auto_now = True)
+	username = ndb.StringProperty(required = True)
+	password = ndb.StringProperty(required = True)
+	email = ndb.StringProperty()
+	created = ndb.DateTimeProperty(auto_now = True)
 
-class Post(db.Model):
+class Post(ndb.Model):
 
-	title = db.StringProperty(required = True)
-	content = db.TextProperty(required = True)
-	username =db.StringProperty(required = True)
-	created = db.DateTimeProperty(auto_now_add = True)
-	last_modified = db.DateTimeProperty(auto_now = True)
-
-
-		
+	title = ndb.StringProperty(required = True)
+	content = ndb.TextProperty(required = True)
+	username =ndb.StringProperty(required = True)
+	created = ndb.DateTimeProperty(auto_now_add = True)
+	last_modified = ndb.DateTimeProperty(auto_now = True)
+	like = ndb.StringProperty(repeated=True)
+	dilike = ndb.StringProperty(repeated=True)
+	
 class Handler(webapp2.RequestHandler):
 
 	def write(self, *a, **kw):
@@ -116,31 +114,33 @@ class MainPage(Handler):
 
 
 	def get(self):
-		posts = db.GqlQuery("SELECT * FROM Post order by last_modified desc limit 10")
+		posts = ndb.gql("SELECT * FROM Post order by last_modified desc limit 10")
 		user = ""
 		user_id = self.request.cookies.get("user_id", "1234|6547")
 		check_cookie = secure_cookie(user_id)
 		if check_cookie :
-			user_name = Users.get_by_id(int(check_cookie),parent=None)
+			user_name = Users.get_by_id(int(check_cookie))
 			user = user_name.username
 			self.render_html("frontpage.html", user = user, posts = posts)
 		else:
 			
 			self.render_html("frontpage.html", user = user, posts = posts)
 	def post(self):
-		error = True
+
 		del_key = self.request.get("del")
 		edit_key = self.request.get("edit")
+		like = self.request
 		my_cookie =self.request.cookies.get("user_id", "1234|6547")
 		if del_key :
 			del_result = del_post(del_key,my_cookie)
 			self.write(del_result)
 		if edit_key :
-			error = edit_post(edit_key,my_cookie)
-		if error == False :
-			self.redirect("/edit?key=%s"% edit_key)
-		if error == True :
-			self.write("this post belong to another user")
+			edit_result = edit_post(edit_key,my_cookie)
+			if edit_result :
+				self.write(edit_result)
+			else:
+				self.redirect("/edit?key=%s"% edit_key)
+
 
 class LogIn(Handler):
 
@@ -152,12 +152,12 @@ class LogIn(Handler):
 		username = self.request.get("username")
 		password = self.request.get("password")
 
-		user_pass = db.GqlQuery("SELECT * FROM Users WHERE username='%s'" % username)
+		user_pass = ndb.gql("SELECT * FROM Users WHERE username='%s'" % username)
 		user_pass_get = user_pass.get()
 		if user_pass_get :
 			real_pass = pass_check_salt(password, user_pass_get.password)
 		if real_pass == True :
-			id_hashed = hmac_secure(user_pass_get.key().id())
+			id_hashed = hmac_secure(user_pass_get.key.id())
 			self.response.headers.add_header("set-Cookie","user_id=%s" %id_hashed)
 			self.redirect("/")
 
@@ -189,7 +189,7 @@ class SignUp(Handler):
 			have_error = True
 		if not valid_email(email):
 			error["er_email"] = "email error"
-		check_username = db.GqlQuery("SELECT * from Users WHERE username='%s'"%username)
+		check_username = ndb.gql("SELECT * from Users WHERE username='%s'"%username)
 		ge_ch=check_username.get()
 		if ge_ch :
 			error["exist"] = "user already exist try an other user"
@@ -203,7 +203,7 @@ class SignUp(Handler):
 			save_entity = Users(username = username, password = has_password, email = email)
 			save_entity.put()
 			
-			user_id = save_entity.key().id()
+			user_id = save_entity.key.id()
 			id_hashed = hmac_secure(user_id)
 			self.response.headers.add_header("set-Cookie","user_id=%s" % id_hashed)
 			self.redirect("/welcome")
@@ -244,10 +244,10 @@ class NewPost(Handler):
 			have_error = True
 			error["login"] = "please login first"
 		if have_error == False:
-			username = Users.get_by_id(int(check_cookie), parent=None)
+			username = Users.get_by_id(int(check_cookie))
 			q = Post(title = title, content = content, username=username.username)
 			q.put()
-			self.redirect("/mynewpost/%s"%str(q.key().id()))
+			self.redirect("/mynewpost/%s"%str(q.key.id()))
 		else:
 			self.render_html("newpost.html", **error)
 
@@ -269,7 +269,7 @@ class MyPosts(Handler):
 		if user_id :
 			user_n = Users.get_by_id(int(user_id))
 			user_name = user_n.username
-			posts = db.GqlQuery("SELECT * FROM Post WHERE username = '%s'"%user_name)
+			posts = ndb.gql("SELECT * FROM Post WHERE username = '%s'"%user_name)
 			self.render_html("myposts.html", posts = posts)
 		else:
 			self.redirect("/login")
@@ -280,6 +280,12 @@ class MyPosts(Handler):
 		if del_key :
 			del_result = del_post(del_key,my_cookie)
 			self.write(del_result)
+		if edit_key :
+			edit_result = edit_post(edit_key,my_cookie)
+			if edit_result :
+				self.write(edit_result)
+			else:
+				self.redirect("/edit?key=%s"% edit_key)
 
 class LogOut(Handler):
 
@@ -292,7 +298,7 @@ class Edit(Handler):
 
 		key = self.request.get("key")
 		if key :
-			post = Post.get(key)
+			post = Post.get_by_id(int(key))
 			self.render_html("newpost.html", title = post.title, content = post.content)
 		else: 
 			self.write("error happend ")
@@ -316,12 +322,12 @@ class Edit(Handler):
 			have_error = True
 			error["login"] = "please login first"
 		if have_error == False:
-			username = Users.get_by_id(int(check_cookie), parent=None)
-			q = Post.get(key)
+			username = Users.get_by_id(int(check_cookie))
+			q = Post.get_by_id(int(key))
 			q.title = title
 			q.content = content
 			q.put()
-			self.redirect("/mynewpost/%s"%str(q.key().id()))
+			self.redirect("/mynewpost/%s"%str(q.key.id()))
 		else:
 			self.render_html("newpost.html", **error)
 		

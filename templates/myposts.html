@@ -9,8 +9,8 @@
 	<hr style="border-width: 1px">
 	<h2>{{data.title}}</h2>
 	<p>{{data.content}}</p>
-	<button name="del" value="{{data.key()}}">delete</button>
-	<button name="edit" value="{{data.key()}}">edit</button>
+	<button name="del" value="{{data.key.id()}}">delete</button>
+	<button name="edit" value="{{data.key.id()}}">edit</button>
 
 {% endfor %}
 </form>
