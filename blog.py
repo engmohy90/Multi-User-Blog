@@ -93,7 +93,9 @@ class Post(ndb.Model):
 	created = ndb.DateTimeProperty(auto_now_add = True)
 	last_modified = ndb.DateTimeProperty(auto_now = True)
 	like = ndb.StringProperty(repeated=True)
-	dilike = ndb.StringProperty(repeated=True)
+	unlike = ndb.StringProperty(repeated=True)
+	nunlike =ndb.IntegerProperty()
+	nlike =ndb.IntegerProperty()
 	
 class Handler(webapp2.RequestHandler):
 
@@ -110,11 +112,78 @@ class Handler(webapp2.RequestHandler):
 		
 		self.write(self.render_str(template, **kw))
 
+	def like_post(self, like, login_id):
+
+		post_query = Post.get_by_id(int(like))
+		login_query = Users.get_by_id(int(login_id))
+		u = login_query.username
+		if u == post_query.username:
+				
+			return self.write("this is your post")
+
+		if u in post_query.like :
+
+			return self.write("you liked this before")
+		if u in post_query.unlike :
+			list_unlike = post_query.unlike
+			list_unlike.remove(u)
+			post_query.unlike = list_unlike
+			post_query.nunlike = post_query.nunlike - 1
+
+		if post_query.like:
+
+			post_query.like = post_query.like + [u]
+			post_query.nlike = post_query.nlike + 1
+			post_query.put()
+			return self.redirect("/")
+
+
+			
+		else :
+			post_query.like = [u]
+			post_query.nlike =  1
+			post_query.put()
+			return self.redirect("/")
+	def unlike_post (self, unlike, login_id):
+
+		post_query = Post.get_by_id(int(unlike))
+		login_query = Users.get_by_id(int(login_id))
+		u = login_query.username
+			
+
+		if u == post_query.username:
+
+			return self.write("this is your post")
+
+			
+		if u in post_query.unlike :
+
+			return self.write("you unliked this before")
+
+
+		if u in post_query.like :
+			list_like = post_query.like
+			list_like.remove(u)
+			post_query.like = list_like
+			post_query.nlike = post_query.nlike - 1
+
+		if post_query.unlike:
+			post_query.unlike = post_query.unlike + [u]
+			post_query.nunlike = post_query.nunlike + 1
+			post_query.put()
+			return self.redirect("/")
+	
+		else :
+			post_query.unlike = [u]
+			post_query.nunlike =  1
+			post_query.put()
+			return self.redirect("/")
+
 class MainPage(Handler):
 
 
 	def get(self):
-		posts = ndb.gql("SELECT * FROM Post order by last_modified desc limit 10")
+		posts = Post.query().order(-Post.last_modified ).fetch(10)
 		user = ""
 		user_id = self.request.cookies.get("user_id", "1234|6547")
 		check_cookie = secure_cookie(user_id)
@@ -125,22 +194,35 @@ class MainPage(Handler):
 		else:
 			
 			self.render_html("frontpage.html", user = user, posts = posts)
+
+
+			
 	def post(self):
 
 		del_key = self.request.get("del")
 		edit_key = self.request.get("edit")
-		like = self.request
+		like = self.request.get("like")
+		unlike = self.request.get("unlike")
 		my_cookie =self.request.cookies.get("user_id", "1234|6547")
-		if del_key :
+		login_id = secure_cookie(my_cookie)
+		if del_key and login_id :
 			del_result = del_post(del_key,my_cookie)
 			self.write(del_result)
-		if edit_key :
+		if edit_key and login_id :
 			edit_result = edit_post(edit_key,my_cookie)
 			if edit_result :
 				self.write(edit_result)
 			else:
 				self.redirect("/edit?key=%s"% edit_key)
+		if unlike and login_id :
+			self.unlike_post(unlike, login_id)
 
+		if like and login_id :
+			self.like_post(like, login_id)		
+		
+		else:
+					
+			self.redirect("/login")
 
 class LogIn(Handler):
 
@@ -245,7 +327,7 @@ class NewPost(Handler):
 			error["login"] = "please login first"
 		if have_error == False:
 			username = Users.get_by_id(int(check_cookie))
-			q = Post(title = title, content = content, username=username.username)
+			q = Post(title = title, content = content, username=username.username, nlike=0, nunlike=0)
 			q.put()
 			self.redirect("/mynewpost/%s"%str(q.key.id()))
 		else:
