@@ -84,7 +84,13 @@ class Users(ndb.Model):
 	password = ndb.StringProperty(required = True)
 	email = ndb.StringProperty()
 	created = ndb.DateTimeProperty(auto_now = True)
+class  Comment (ndb.Model):
 
+	c_username =ndb.StringProperty(required = True)
+	created = ndb.DateTimeProperty(auto_now_add = True)
+	post_id = ndb.IntegerProperty(required = True)
+	comment = ndb.TextProperty(required = True)
+		
 class Post(ndb.Model):
 
 	title = ndb.StringProperty(required = True)
@@ -97,6 +103,14 @@ class Post(ndb.Model):
 	nunlike =ndb.IntegerProperty()
 	nlike =ndb.IntegerProperty()
 	
+	def render_post(post):
+		post_id = post.key.id()
+		comments = ndb.gql("SELECT * FROM Comment WHERE post_id = %d" % post_id).fetch()
+		return render_str("post.html" , data = post, comments=comments)
+
+def render_str(template, **params):
+    t = jinja_env.get_template(template)
+    return t.render(params)
 class Handler(webapp2.RequestHandler):
 
 	def write(self, *a, **kw):
@@ -135,10 +149,7 @@ class Handler(webapp2.RequestHandler):
 			post_query.like = post_query.like + [u]
 			post_query.nlike = post_query.nlike + 1
 			post_query.put()
-			return self.redirect("/")
-
-
-			
+			return self.redirect("/")			
 		else :
 			post_query.like = [u]
 			post_query.nlike =  1
@@ -149,8 +160,6 @@ class Handler(webapp2.RequestHandler):
 		post_query = Post.get_by_id(int(unlike))
 		login_query = Users.get_by_id(int(login_id))
 		u = login_query.username
-			
-
 		if u == post_query.username:
 
 			return self.write("this is your post")
@@ -172,7 +181,6 @@ class Handler(webapp2.RequestHandler):
 			post_query.nunlike = post_query.nunlike + 1
 			post_query.put()
 			return self.redirect("/")
-	
 		else :
 			post_query.unlike = [u]
 			post_query.nunlike =  1
@@ -195,10 +203,9 @@ class MainPage(Handler):
 			
 			self.render_html("frontpage.html", user = user, posts = posts)
 
-
-			
 	def post(self):
-
+		comment = self.request.get("comment")
+		postcom_id = self.request.get("post_id")
 		del_key = self.request.get("del")
 		edit_key = self.request.get("edit")
 		like = self.request.get("like")
@@ -214,15 +221,27 @@ class MainPage(Handler):
 				self.write(edit_result)
 			else:
 				self.redirect("/edit?key=%s"% edit_key)
-		if unlike and login_id :
-			self.unlike_post(unlike, login_id)
+		if unlike :
+		 	if login_id :
+				self.unlike_post(unlike, login_id) 
+			else:
+				self.redirect("/login")
 
-		if like and login_id :
-			self.like_post(like, login_id)		
-		
-		else:
-					
-			self.redirect("/login")
+		if like :
+			if login_id :
+				self.like_post(like, login_id)		
+			else:
+				self.redirect("/login")	
+
+		if postcom_id:
+			if login_id:
+				c_username = Users.get_by_id(int(login_id))
+				q = Comment(comment=comment, post_id=int(postcom_id), c_username=c_username.username)
+				q.put()
+				self.redirect("/")
+
+			else:
+				self.redirect("/login")
 
 class LogIn(Handler):
 
@@ -377,16 +396,17 @@ class LogOut(Handler):
 
 class Edit(Handler):
 	def get(self):
-
+		referer = self.request.headers['Referer']
 		key = self.request.get("key")
 		if key :
 			post = Post.get_by_id(int(key))
-			self.render_html("newpost.html", title = post.title, content = post.content)
+			self.render_html("edit.html", title = post.title, content = post.content,back = referer)
 		else: 
 			self.write("error happend ")
 
 	def post(self):
-
+		
+		cancle = self.request.get("cancle")
 		key = self.request.get("key")
 		cookie_get = self.request.cookies.get("user_id", "1234|6547")
 		check_cookie = secure_cookie(cookie_get)
@@ -394,6 +414,8 @@ class Edit(Handler):
 		content = self.request.get("content")
 		error = dict()
 		have_error =False
+		if cancle :
+			self.redirect(str(cancle))
 		if not title :
 			error["title_empty"] = "please enter title"
 			have_error = True
@@ -403,7 +425,7 @@ class Edit(Handler):
 		if check_cookie == None:
 			have_error = True
 			error["login"] = "please login first"
-		if have_error == False:
+		if have_error == False and not cancle:
 			username = Users.get_by_id(int(check_cookie))
 			q = Post.get_by_id(int(key))
 			q.title = title
@@ -411,7 +433,7 @@ class Edit(Handler):
 			q.put()
 			self.redirect("/mynewpost/%s"%str(q.key.id()))
 		else:
-			self.render_html("newpost.html", **error)
+			self.render_html("edit.html", **error)
 		
 
 

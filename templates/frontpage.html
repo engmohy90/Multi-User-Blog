@@ -20,25 +20,16 @@
 
 <hr style="border-width: 3px">
 
-<form method="post">
+
 
 {% for data in posts %}
 
-	<hr style="border-width: 1px">
-	<span style="color: #32bcfb ;float: right;font-size: .7em;"> CREATED AT :{{data.created.strftime("%b %d, %Y")}}</span>
-	<h2>{{data.title}}</h2>
-	<p>{{data.content}}</p>
-	<P>number of likes{{data.nlike}}</P>
-	<button name="like" value="{{data.key.id()}}">like</button>
-	<span>number of likes{{data.nlike}}</span>
-	<button  name="unlike" value="{{data.key.id()}}">unlike</button>
-	<span>number of unlikes{{data.nunlike}}</span>
+	{{data.render_post() |safe}}
 
-	<button name="del" value="{{data.key.id()}}">delete</button>
-	<button name="edit" value="{{data.key.id()}}">edit</button>
+
 
 {% endfor %}
-</form>
+
 <hr style="border-width: 3px">
 <h2 id="about">About me </h2>
 <p> iam mohamed mohy from egypt <br>
