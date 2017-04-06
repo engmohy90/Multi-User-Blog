@@ -1,25 +1,25 @@
 {% extends "html.html" %}
 {% block html %}
-<a href="/signup"> <button name="signup" style="background-color: green; width: 136px; height: 40px">signup</button></a>
+  <a href="/signup"> <button name="signup" style="background-color: green; width: 136px; height: 40px">signup</button></a>
 
-<form method="post">
+  <form method="post">
 
-<h1>login</h1>
-	<table>
-		<tr>
-			<td>username</td>
-			<td><input type="text" name="username"></td>
-		</tr>
-		<tr>
-			<td>password</td>
-			<td><input type="password" name="password"></td>
-		</tr>
+  <h1>login</h1>
+  <table>
+	<tr>
+		<td>username</td>
+		<td><input type="text" name="username"></td>
+	</tr>
+	<tr>
+		<td>password</td>
+		<td><input type="password" name="password"></td>
+	</tr>
 
-	</table>
-	<br>
-	<p style="color: red"> {{error}}</p>
-	<br>
-	<input type="submit">
+  </table>
+  <br>
+  <p style="color: red"> {{error}}</p>
+  <br>
+  <input type="submit">
 	
 </form>
 

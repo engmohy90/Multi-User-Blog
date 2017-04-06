@@ -1,17 +1,15 @@
 {% extends "html.html" %}
 {% block html %}
-<a href="/newpost"> <button name="newpost" style="background-color: green; width: 136px; height: 40px">new post</button></a>
-<a href="/logout"> <button name="logout" style="background-color: green; width: 136px; height: 40px">logout</button></a>
-<form method="post">
-{% for data in posts %}
+  <a href="/newpost"> <button name="newpost" style="background-color: green; width: 136px; height: 40px">new post</button></a>
+  <a href="/logout"> <button name="logout" style="background-color: green; width: 136px; height: 40px">logout</button></a>
+  <form method="post">
+  {% for data in posts %}
+    <hr style="border-width: 1px">
+    <h2>{{data.title}}</h2>
+    <p>{{data.content}}</p>
+    <button name="del" value="{{data.key.id()}}">delete</button>
+    <button name="edit" value="{{data.key.id()}}">edit</button>
 
-
-	<hr style="border-width: 1px">
-	<h2>{{data.title}}</h2>
-	<p>{{data.content}}</p>
-	<button name="del" value="{{data.key.id()}}">delete</button>
-	<button name="edit" value="{{data.key.id()}}">edit</button>
-
-{% endfor %}
-</form>
-{% endblock %}
+  {% endfor %}
+  </form>
+ {% endblock %}

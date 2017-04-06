@@ -1,42 +1,29 @@
 {% extends "html.html" %}
-
 {% block html %}
+  {% if user == "" %}	
+    <a href="/login"> <button name="login" class="button_green">login</button></a>
+    <a href="/signup"> <button name="signup" class="button_green">signup</button></a>
+  {% else  %}
+    <h3>you are logedin as {{user}}</h3>
+    <a href="/newpost"> <button name="newpost" class="button_green">new post</button></a>
+    <a href="/myposts"> <button name="myposts" class="button_green">my posts</button></a>
+    <a href="/logout"> <button name="logout" class="button_green">logout</button></a>
+  {% endif %}
+    <hr style="border-width: 3px">
+  {% for data in posts %}
+    {{data.render_post() |safe}}
+  {% endfor %}
+  <hr style="border-width: 3px">
+  <h2 id="about">About me </h2>
+  <p> iam mohamed mohy from egypt <br>
+        i love PES and watching movies<br>
+	    and this is adam post it should be longer than this so i am  going to  write any thing here <br>
+	    so if you like my blog donot feel shy to contact me :D smilly face &#9786;
+  </p>
 
- 	{% if user == "" %}	
-
- 	<a href="/login"> <button name="login" style="background-color: green; width: 136px; height: 40px">login</button></a>
-	<a href="/signup"> <button name="signup" style="background-color: green; width: 136px; height: 40px">signup</button></a>
-	
-	{% else  %}
-
-	<h3>you are logedin as {{user}}</h3>
-
-	<a href="/newpost"> <button name="newpost" style="background-color: green; width: 136px; height: 40px">new post</button></a>
-	<a href="/myposts"> <button name="myposts" style="background-color: green; width: 136px; height: 40px">my posts</button></a>
-
-	<a href="/logout"> <button name="logout" style="background-color: green; width: 136px; height: 40px">logout</button></a>
-	
-	{% endif %}
-
-<hr style="border-width: 3px">
-
-
-
-{% for data in posts %}
-
-	{{data.render_post() |safe}}
-
-
-
-{% endfor %}
-
-<hr style="border-width: 3px">
-<h2 id="about">About me </h2>
-<p> iam mohamed mohy from egypt <br>
-	i love PES and watching movies<br>
-	and this is adam post it should be longer than this so i am  going to  write any thing here <br>
-	so if you like my blog donot feel shy to contact me :D smilly face &#9786;
-
-</p>
-
+  {% if error: %}
+  <script>
+      alert("{{error}}");
+  </script>
+  {% endif %}
 {% endblock %}

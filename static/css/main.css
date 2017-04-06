@@ -33,18 +33,67 @@ body {
 .active {
     background-color: #4CAF50;
 }
+
 .Clogo {
 	float: left;
 	margin: 15px;
 }
+
 .Clist {
 	list-style: none;
 }
+
 textarea {
     width: 450px;
     height: 150px;
 }
+
 .title {
     width: 150px;
     height: 30px;
 }
+
+.button_green {
+    background-color: green;
+    width: 136px;
+    height: 40px;
+}
+
+.created {
+    color: #32bcfb;
+    float: right;
+    font-size: .7em;
+}
+
+.post {
+    background-color: rgba(74, 155, 195, 0.11);
+}
+
+.both {
+    border-style: outset;
+}
+
+.comment {
+    background-color: rgba(128, 128, 128, 0.14);
+}
+.username {
+    color: blueviolet;
+    border-style: double;
+    border-color: black;
+}
+
+.username_c {
+    color: blueviolet;
+    border-style: double;
+    border-color: black;
+}
+
+
+
+
+
+
+
+
+
+
