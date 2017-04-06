@@ -26,10 +26,6 @@ body {
     text-decoration: none;
 }
 
-.li_nav:hover:not(.active) {
-    background-color: #111;
-}
-
 .active {
     background-color: #4CAF50;
 }
@@ -66,7 +62,7 @@ textarea {
 }
 
 .post {
-    background-color: rgba(74, 155, 195, 0.11);
+    background-color: #c9eafb;
 }
 
 .both {
@@ -74,16 +70,16 @@ textarea {
 }
 
 .comment {
-    background-color: rgba(128, 128, 128, 0.14);
+    background-color: #e2f0fd;
 }
 .username {
-    color: blueviolet;
+    color: #8a2be2;
     border-style: double;
     border-color: black;
 }
 
 .username_c {
-    color: blueviolet;
+    color: #8a2be2;
     border-style: double;
     border-color: black;
 }
