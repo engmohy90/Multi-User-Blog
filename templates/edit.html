@@ -1,0 +1,33 @@
+{% extends "html.html" %}
+{% block html %}
+ {% if login == "please login first" %}
+   <a href="/login"> <button name="login" style="background-color: green; width: 136px; height: 40px">login</button></a>
+   <hr style="border-width: 3px">
+   <form method="post">
+		<h4>Your Post Title</h4>
+		<input class="title" type="text" name="title" value="{{title}}" disabled >
+		<h4> Input your Post Down Here</h4>
+		<textarea name="content" disabled>{{content}}</textarea >
+		<p style="color: red">{{login}}</p>
+		<br>
+	  	<br>
+		<input type="submit" >
+	</form>
+ {% else %}
+  <hr style="border-width: 3px">
+  <form method="post">
+		<h4>Your Post Title</h4>
+		<input class="title" type="text" name="title" value="{{title}}" >
+		<p style="color: red">{{title_empty}}</p>
+		<h4> Input your Post Down Here</h4>
+		<textarea name="content">{{content}}</textarea>
+		<p style="color: red">{{post_empty}}</p>
+		<p style="color: red">{{login}}</p>
+		<br>
+		<br>
+		<button name="cancle" value="{{back}}">cancle</button>
+		<input type="submit" >
+	</form>
+ {% endif %}
+
+{% endblock %}

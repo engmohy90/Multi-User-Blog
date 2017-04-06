@@ -1,0 +1,11 @@
+{% extends "html.html" %}
+{% block html %}
+  <form method="post">
+  	<textarea name="comment">{{comedit.comment}}</textarea>
+  	<br>
+	<button type="submit" name="cancle"  value="cancle">cancle</button>
+	<button type="submit"  name="comedit" value={{comedit.key.id()}}>submit</button>
+
+  </form>
+
+{% endblock %}
