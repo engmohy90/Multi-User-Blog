@@ -237,6 +237,7 @@ class MainPage(Handler):
     # check which button clicked (like or edite or deleted or..) and
     # make right dession 
     def post(self):
+
         comdel = self.request.get("comdel")
         comedit = self.request.get("comedit")
         comment = self.request.get("comment")
@@ -247,70 +248,72 @@ class MainPage(Handler):
         unlike = self.request.get("unlike")
         my_cookie = self.request.cookies.get("user_id", "1234|6547")
         login_id = secure_cookie(my_cookie)
-        posts = Post.query().order(-Post.created).fetch(10)
-        user = ""
-        if login_id:
-            user_name = Users.get_by_id(int(login_id))
-            user = user_name.username
-
-        if del_key:
-            del_result = self.del_post(del_key, my_cookie)
-            self.render_html("frontpage.html", user=user, posts=posts,
-                             error=del_result)
-        if edit_key:
-            edit_result = self.edit_post(edit_key, my_cookie)
-            if edit_result:
-                self.render_html("frontpage.html", user=user, posts=posts,
-                                 error=edit_result)
-            else:
-                self.redirect("/edit?key=%s" % edit_key)
-        if unlike:
-            unlike_click = None
+        if login_id :
+            posts = Post.query().order(-Post.created).fetch(10)
+            user = ""
             if login_id:
-                unlike_click = self.unlike_post(unlike, login_id)
-            if unlike_click is not None:
-                self.render_html("frontpage.html", user=user,
-                                 posts=posts, error=unlike_click)
-            else:
-                self.redirect("/login")
+                user_name = Users.get_by_id(int(login_id))
+                user = user_name.username
 
-        if like:
-            like_click = None
-            if login_id:
-                like_click = self.like_post(like, login_id)
-            if like_click is not None:
+            if del_key:
+                del_result = self.del_post(del_key, my_cookie)
                 self.render_html("frontpage.html", user=user, posts=posts,
-                                 error=like_click)
-            else:
-                self.redirect("/login")
+                                 error=del_result)
+            if edit_key:
+                edit_result = self.edit_post(edit_key, my_cookie)
+                if edit_result:
+                    self.render_html("frontpage.html", user=user, posts=posts,
+                                     error=edit_result)
+                else:
+                    self.redirect("/edit?key=%s" % edit_key)
+            if unlike:
+                unlike_click = None
+                if login_id:
+                    unlike_click = self.unlike_post(unlike, login_id)
+                if unlike_click is not None:
+                    self.render_html("frontpage.html", user=user,
+                                     posts=posts, error=unlike_click)
+                else:
+                    self.redirect("/login")
 
-        if postcom_id:
-            if login_id:
-                c_username = Users.get_by_id(int(login_id))
-                q = Comment(comment=comment, post_id=int(postcom_id),
-                            c_username=c_username.username)
-                q.put()
-                self.redirect("/")
+            if like:
+                like_click = None
+                if login_id:
+                    like_click = self.like_post(like, login_id)
+                if like_click is not None:
+                    self.render_html("frontpage.html", user=user, posts=posts,
+                                     error=like_click)
+                else:
+                    self.redirect("/login")
 
-            else:
-                self.redirect("/login")
-        if comdel:
-            coment_q = Comment.get_by_id(int(comdel))
-            if coment_q.c_username == user:
-                coment_q.key.delete()
-                self.render_html("frontpage.html", user=user, posts=posts)
-            else:
-                self.render_html("frontpage.html", user=user, posts=posts,
-                                 error="you cannot delete this comment")
-        if comedit:
-            coment_q = Comment.get_by_id(int(comedit))
-            if coment_q.c_username == user:
-                self.redirect("/comedit?id=%s" % coment_q.key.id())
-            else:
-                self.render_html("frontpage.html", user=user, posts=posts,
-                                 error="you cannot edite this comment")
+            if postcom_id:
+                if login_id:
+                    c_username = Users.get_by_id(int(login_id))
+                    q = Comment(comment=comment, post_id=int(postcom_id),
+                                c_username=c_username.username)
+                    q.put()
+                    self.redirect("/")
 
+                else:
+                    self.redirect("/login")
+            if comdel:
+                coment_q = Comment.get_by_id(int(comdel))
+                if coment_q.c_username == user:
+                    coment_q.key.delete()
+                    self.render_html("frontpage.html", user=user, posts=posts)
+                else:
+                    self.render_html("frontpage.html", user=user, posts=posts,
+                                     error="you cannot delete this comment")
+            if comedit:
+                coment_q = Comment.get_by_id(int(comedit))
+                if coment_q.c_username == user:
+                    self.redirect("/comedit?id=%s" % coment_q.key.id())
+                else:
+                    self.render_html("frontpage.html", user=user, posts=posts,
+                                     error="you cannot edite this comment")
 
+        else:
+            self.redirect("/login")
 # check for user then add cookies if user is ok
 class LogIn(Handler):
 
@@ -413,27 +416,31 @@ class NewPost(Handler):
     def post(self):
         cookie_get = self.request.cookies.get("user_id", "1234|6547")
         check_cookie = secure_cookie(cookie_get)
-        title = self.request.get("title")
-        content = self.request.get("content")
-        error = dict()
-        have_error = False
-        if not title:
-            error["title_empty"] = "please enter title"
-            have_error = True
-        if not content:
-            error["post_empty"] = "please enter content to your post"
-            have_error = True
         if check_cookie is None:
-            have_error = True
-            error["login"] = "please login first"
-        if have_error is False:
-            username = Users.get_by_id(int(check_cookie))
-            q = Post(title=title, content=content, username=username.username,
-                     nlike=0, nunlike=0)
-            q.put()
-            self.redirect("/mynewpost/%s" % str(q.key.id()))
+            self.redirect("/login")
         else:
-            self.render_html("newpost.html", **error)
+
+            title = self.request.get("title")
+            content = self.request.get("content")
+            error = dict()
+            have_error = False
+            if not title:
+                error["title_empty"] = "please enter title"
+                have_error = True
+            if not content:
+                error["post_empty"] = "please enter content to your post"
+                have_error = True
+            if check_cookie is None:
+                have_error = True
+                error["login"] = "please login first"
+            if have_error is False:
+                username = Users.get_by_id(int(check_cookie))
+                q = Post(title=title, content=content, username=username.username,
+                         nlike=0, nunlike=0)
+                q.put()
+                self.redirect("/mynewpost/%s" % str(q.key.id()))
+            else:
+                self.render_html("newpost.html", **error)
 
 
 # view post alone t
@@ -464,18 +471,22 @@ class MyPosts(Handler):
             self.redirect("/login")
 
     def post(self):
-        del_key = self.request.get("del")
-        edit_key = self.request.get("edit")
         my_cookie = self.request.cookies.get("user_id", "1234|6547")
-        if del_key:
-            del_result = del_post(del_key, my_cookie)
-            self.write(del_result)
-        if edit_key:
-            edit_result = edit_post(edit_key, my_cookie)
-            if edit_result:
-                self.write(edit_result)
-            else:
-                self.redirect("/edit?key=%s" % edit_key)
+        check_cookie = secure_cookie(my_cookie)
+        if check_cookie:
+            del_key = self.request.get("del")
+            edit_key = self.request.get("edit")
+            if del_key:
+                del_result = del_post(del_key, my_cookie)
+                self.write(del_result)
+            if edit_key:
+                edit_result = edit_post(edit_key, my_cookie)
+                if edit_result:
+                    self.write(edit_result)
+                else:
+                    self.redirect("/edit?key=%s" % edit_key)
+        else:
+            self.redirect("/login")
 
 
 # clear cookies and logout
@@ -501,35 +512,38 @@ class Edit(Handler):
 
     def post(self):
 
-        cancle = self.request.get("cancle")
-        key = self.request.get("key")
         cookie_get = self.request.cookies.get("user_id", "1234|6547")
         check_cookie = secure_cookie(cookie_get)
-        title = self.request.get("title")
-        content = self.request.get("content")
-        error = dict()
-        have_error = False
-        if cancle:
-            self.redirect(str(cancle))
-        if not title:
-            error["title_empty"] = "please enter title"
-            have_error = True
-        if not content:
-            error["post_empty"] = "please enter content to your post"
-            have_error = True
-        if check_cookie is None:
-            have_error = True
-            error["login"] = "please login first"
-        if have_error is False and not cancle:
-            username = Users.get_by_id(int(check_cookie))
-            q = Post.get_by_id(int(key))
-            q.title = title
-            q.content = content
-            q.put()
-            self.redirect("/mynewpost/%s" % str(q.key.id()))
+        if check_cookie:
+            cancle = self.request.get("cancle")
+            key = self.request.get("key")
+            title = self.request.get("title")
+            content = self.request.get("content")
+            error = dict()
+            have_error = False
+            if cancle:
+                self.redirect(str(cancle))
+            if not title:
+                error["title_empty"] = "please enter title"
+                have_error = True
+            if not content:
+                error["post_empty"] = "please enter content to your post"
+                have_error = True
+            if check_cookie is None:
+                have_error = True
+                error["login"] = "please login first"
+            if have_error is False and not cancle:
+                username = Users.get_by_id(int(check_cookie))
+                q = Post.get_by_id(int(key))
+                if q and q.username == username.username:
+                    q.title = title
+                    q.content = content
+                    q.put()
+                    self.redirect("/mynewpost/%s" % str(q.key.id()))
+            else:
+                self.render_html("edit.html", **error)
         else:
-            self.render_html("edit.html", **error)
-
+            self.redirect("/login")
 
 # edit comment of the posts
 class Comedit(Handler):
