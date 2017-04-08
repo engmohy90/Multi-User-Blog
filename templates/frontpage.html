@@ -11,19 +11,54 @@
   {% endif %}
     <hr style="border-width: 3px">
   {% for data in posts %}
-    {{data.render_post() |safe}}
+    {% set comments = data.render_post() %}
+      <form method="post">
+        <div class="both">
+          <div class="post">
+            <span class="created"> CREATED AT :{{data.created.strftime("%b %d, %Y")}}</span>
+            <h2><span class="username">{{data.username}}</span></h2>
+            <h3>{{data.title}}</h3>
+            <p>{{data.content}}</p>
+            <button name="like" value="{{data.key.id()}}">like</button>
+            <span>{{data.nlike}}</span>
+            <button name="unlike" value="{{data.key.id()}}">unlike</button>
+            <span>{{data.nunlike}}</span>
+
+            <button name="del" value="{{data.key.id()}}">delete</button>
+            <button name="edit" value="{{data.key.id()}}">edit</button>
+            <hr>
+          </div>
+          <div class="comment">
+            {% for c in comments %}
+          
+            <h5 ><span class="username_c">{{c.c_username}}</span></h5>
+            <p>{{c.comment}}</p>
+            <button name="comdel" value="{{c.key.id()}}">delete</button>
+            <button name="comedit" value="{{c.key.id()}}">edit</button>
+            <hr>
+          
+            {% endfor %}
+          </div>
+
+          <h3>add comment</h3>
+          <textarea name = "comment">{{i}}</textarea>
+          <br>
+          <button type="submit" name = "post_id" value="{{data.key.id()}}">comment</button>
+        </div>
+      </form>
+      <hr style="border-width: 3px">
   {% endfor %}
-  <hr style="border-width: 3px">
-  <h2 id="about">About me </h2>
-  <p> iam mohamed mohy from egypt <br>
-        i love PES and watching movies<br>
-	    and this is adam post it should be longer than this so i am  going to  write any thing here <br>
-	    so if you like my blog donot feel shy to contact me :D smilly face &#9786;
-  </p>
+    <hr style="border-width: 3px">
+    <h2 id="about">About me </h2>
+    <p> iam mohamed mohy from egypt <br>
+          i love PES and watching movies<br>
+  	    and this is adam post it should be longer than this so i am  going to  write any thing here <br>
+  	    so if you like my blog donot feel shy to contact me :D smilly face &#9786;
+    </p>
 
   {% if error: %}
-  <script>
-      alert("{{error}}");
-  </script>
+    <script>
+        alert("{{error}}");
+    </script>
   {% endif %}
 {% endblock %}
